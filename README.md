@@ -1,10 +1,3 @@
-<style>
-
-    p { text-align: justify }
-    li { list-style: none }
-
-</style>
-
 <h1 id="header">Machine Learning classification model analysis</h1>
 
 This project focuses on analysing the performance of various Machine Learning models available in python's [scikit-learn](https://scikit-learn.org/stable/index.html) package when trying to predict wine classification. 
@@ -92,7 +85,7 @@ This notebook includes all the preprocessing done on the data in order to select
 - **Data preparation**. PCA dimension reduction, train/test split and feature normalising.
 - **Model selection**. K Nearest Neighbors, Ridge Classifier and Random Forest Classifier performance testing.
 - **Selected model description**.
-- 
+
 <h3 id="requirements"><code>requirements.txt</code></h3>
 
 This `.txt` includes all the necessary packages in order for the main script to run properly.
