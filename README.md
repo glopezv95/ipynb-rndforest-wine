@@ -18,7 +18,7 @@ The dataset used throughout the project is the [UCI ML Wine Dataset](https://arc
 - [main.py](#main)
 - [optimisation.ipynb](#optimisation)
 - [requirements.txt](#requirements)
-- 
+
 [Running the project](#run)
 
 <h2 id="config">Project configuration</h2>
