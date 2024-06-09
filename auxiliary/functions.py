@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from plotly import express as px
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
 
 from .const import TITLE, SUBTITLE, RANDOM_STATE
 
@@ -75,62 +75,66 @@ def df_export(df: pd.DataFrame, name:str) -> None:
         df.to_csv(f'{name}.csv')
         
 def variance_ratio_analysis(
-    key_features: list, pca_id:int, variance_ratio:np.ndarray, feature_names: list):
+    n_components: int,
+    variance_ratio: np.ndarray,
+    n_columns: int):
     
-    fig = px.bar(x = key_features, y = variance_ratio[:pca_id])
-    fig.add_bar(x = feature_names[pca_id:], y = variance_ratio[pca_id:], name ='excluded')
+    fig = px.bar(x = [f'PC{n}' for n in range(n_components)], y = variance_ratio[:n_components])
+    fig.add_bar(x = [f'PC{n}' for n in range(n_components, n_columns)], y = variance_ratio[n_components:], name ='excluded')
 
     fig.update_layout(
-        title = 'Variance ratio per feature (scaled)',
+        title = 'Variance ratio per Principal Component (scaled)',
         plot_bgcolor = 'rgba(0,0,0,0)',
         font = dict(family = 'sans-serif'))
 
     fig.update_xaxes(title = '')
     fig.update_yaxes(title = '')
-    fig.update_traces(hovertemplate = '<b>Feature:</b> %{x}<br><b>Variance ratio:</b> %{y:.3f}')
+    fig.update_traces(hovertemplate = '<b>Principal Component:</b> %{x}<br><b>Variance ratio:</b> %{y:.3f}')
     fig.show()
         
-def pca_reduction(df: pd.DataFrame, feature_names: list):
+def pca_reduction(X_train:np.ndarray, X_test: np.ndarray) -> None:
     
     bool = input('Next step involves applying PCA dimension reduction. Proceed? (y/n) ')
     if bool.lower() == 'y':
-        
-        pca_scaler = StandardScaler()
-        X_scaled = pca_scaler.fit_transform(df.values)
 
         pca = PCA()
-        pca.fit(X_scaled)
+        pca.fit_transform(X_train)
+        pca.transform(X_test)
+
         variance_ratio = pca.explained_variance_ratio_
 
         pca_features_cum_dict = {}
 
-        for i in range(len(feature_names)):
+        for i in range(len(pca.components_)):
             pca_features_cum_dict[i] = sum(variance_ratio[:i +1])
 
         threshold = 0.9
         var_cum_sum = 0
-        pca_id = 0
+        n_components = 0
 
         for i in range(len(pca_features_cum_dict)):
             if var_cum_sum <= threshold:
                 var_cum_sum = list(pca_features_cum_dict.values())[i]
-                pca_id = i -1
+                n_components = i -1
 
-        key_features = feature_names[:pca_id]
-        print(f'PCA dimension reduction applied. {pca_id} features kept.')
-    
-        return [key_features, variance_ratio, pca_id]
+        pca = PCA(n_components = n_components)
+        X_train = pca.fit_transform(X_train)
+        X_test = pca.fit_transform(X_test)
+
+        print(f'PCA dimension reduction applied. {n_components} components kept')
+        
+        return [X_train, X_test, n_components, variance_ratio, pca]
     
     else:
         print()
         exit()
 
-def data_split(pca_id:int, df:pd.DataFrame, target: pd.Series):
+def data_split(df:pd.DataFrame, target: pd.Series):
     
     bool = input('Next step involves applying a train/test split of the data. Proceed? (y/n) ')
     if bool.lower() == 'y':
         
-        X = df.iloc[:, :pca_id]
+        X = df.values
         test_size = 0.3
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -165,25 +169,25 @@ def standard_scale(X_train:np.ndarray, X_test: np.ndarray):
         
         print('StandardScaler applied.')
         
-        return [X_train_scaled, X_test_scaled]
+        return [X_train_scaled, X_test_scaled, scaler]
     
     else:
         print()
         exit()
 
-def generate_model(X_train_scaled: np.ndarray, X_test_scaled: np.ndarray, y_train: np.ndarray, y_test: np.ndarray):
+def generate_model(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, y_test: np.ndarray):
     
-    bool = input('Next step involves generating the optimised model (Random Forest Regressor). Proceed? (y/n) ')
+    bool = input('Next step involves generating the optimised model (K Nearest Neighbors). Proceed? (y/n) ')
     if bool.lower() == 'y':
         
-        n_estimators = 500
-        model = RandomForestClassifier(n_estimators = n_estimators)
-        model.fit(X_train_scaled, y_train)
-        score = round(model.score(X_test_scaled, y_test), 3)
+        n_neighbors = 7
+        model = KNeighborsClassifier(n_neighbors = n_neighbors)
+        model.fit(X_train, y_train)
+        score = round(model.score(X_test, y_test), 3)
 
         print()
-        print('Chosen model: Random Forest Classifier')
-        print(f'Key hyperparameter: n_estimators = {n_estimators}')
+        print('Chosen model: K Nearest Neighbors Classifier')
+        print(f'Key hyperparameter: n_neighbors = {n_neighbors}')
         print('Model mean accuracy:', score)
         
         return model
@@ -192,13 +196,22 @@ def generate_model(X_train_scaled: np.ndarray, X_test_scaled: np.ndarray, y_trai
         print()
         exit()
         
-def predict(model: RandomForestClassifier, key_features: list, target_classes:list):
+def predict(
+    model: KNeighborsClassifier,
+    key_features: list,
+    target_classes:list,
+    scaler: StandardScaler,
+    pca: PCA):
         
         X = []
         
         for feature in key_features:
             val = float(input(f'Value for feature {feature}: '))
             X.append(val)
-            
-        prediction = model.predict(X = np.array([X]))
-        print('Predicted value:', target_classes[prediction[0]])
+        
+        X = scaler.transform(X = np.array([X]))
+        X = pca.transform(X = X)
+        prediction = model.predict(X = X)
+        
+        print()
+        print('Predicted target value:', target_classes[prediction[0]])

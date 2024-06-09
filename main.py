@@ -12,30 +12,37 @@ if __name__ == '__main__':
     df_export(df = df_describe, name = 'feature description')
     next()
     
-    key_features, variance_ratio, pca_id = pca_reduction(df = df, feature_names = feature_names)
+    X_train, X_test, y_train, y_test = data_split(df = df, target = target)
+    next()
+    
+    X_train, X_test, scaler = standard_scale(X_train = X_train, X_test = X_test)
+    next()
+    
+    X_train, X_test, n_components, variance_ratio, pca = pca_reduction(X_train = X_train, X_test = X_test)
     next()
     
     variance_ratio_analysis(
-        key_features = key_features,
-        pca_id = pca_id,
+        n_components = n_components,
         variance_ratio = variance_ratio,
-        feature_names = feature_names)
-    
-    X_train, X_test, y_train, y_test = data_split(pca_id = pca_id, df = df, target = target)
-    next()
-    
-    X_train_scaled, X_test_scaled = standard_scale(X_train = X_train, X_test = X_test)
-    next()
+        n_columns = len(df.columns)
+        )
     
     model = generate_model(
-        X_train_scaled = X_train_scaled,
-        X_test_scaled = X_test_scaled,
+        X_train = X_train,
+        X_test = X_test,
         y_train = y_train,
         y_test = y_test)
     
     next()
     
     while input('Predict values based on the model? (y/n) ').lower() == 'y':
-        predict(model = model, key_features = key_features, target_classes = target_classes)
+        
+        predict(
+            model = model,
+            key_features = feature_names,
+            target_classes = target_classes,
+            scaler = scaler,
+            pca = pca)
         next()
+        
     print()
