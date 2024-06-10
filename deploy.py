@@ -1,14 +1,15 @@
 import os
+from pathlib import Path
 import subprocess
 
 def create_virtualenv():
     
     subprocess.run(['python', '-m', 'venv', 'venv'])
     if os.name == 'posix':
-        subprocess.run(['source', 'venv/bin/activate'])
+        subprocess.run(['source', Path('venv', 'bin', 'activate')])
         
     elif os.name == 'nt':
-        subprocess.run(['venv\Scripts\activate'])
+        subprocess.run([Path('venv', 'scripts', 'activate')])
 
 def install_dependencies():
     subprocess.run(['pip', 'install', '-r', 'requirements.txt'])
