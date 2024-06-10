@@ -9,7 +9,7 @@ def create_virtualenv():
         subprocess.run(['source', Path('venv', 'bin', 'activate')])
         
     elif os.name == 'nt':
-        subprocess.run([Path('venv', 'scripts', 'activate')])
+        subprocess.run([str(Path('venv', 'scripts', 'activate'))])
 
 def install_dependencies():
     subprocess.run(['pip', 'install', '-r', 'requirements.txt'])
