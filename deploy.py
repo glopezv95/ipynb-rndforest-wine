@@ -6,10 +6,10 @@ def create_virtualenv():
     
     subprocess.run(['python', '-m', 'venv', 'venv'])
     if os.name == 'posix':
-        subprocess.run(['source', Path('venv', 'bin', 'activate')])
+        subprocess.run(['source', str(Path('venv', 'bin', 'activate'))], shell = True)
         
     elif os.name == 'nt':
-        subprocess.run([str(Path('venv', 'scripts', 'activate'))])
+        subprocess.run([str(Path('venv', 'scripts', 'activate'))], shell = True)
 
 def install_dependencies():
     subprocess.run(['pip', 'install', '-r', 'requirements.txt'])
