@@ -8,7 +8,7 @@ def create_virtualenv():
         subprocess.run(['source', 'venv/bin/activate'])
         
     elif os.name == 'nt':
-        subprocess.run(['venv\Scripts\activate.bat'])
+        subprocess.run(['venv\Scripts\activate'])
 
 def install_dependencies():
     subprocess.run(['pip', 'install', '-r', 'requirements.txt'])
